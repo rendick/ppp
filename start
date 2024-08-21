@@ -1,0 +1,4 @@
+#!/bin/sh
+
+make
+./dist-newstyle/build/x86_64-linux/ghc-9.4.8/ppp-0.1.0.0/x/ppp/build/ppp/ppp $1
