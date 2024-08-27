@@ -1,7 +1,6 @@
 module Commands.ProduceFile where
 
 import System.Directory (doesFileExist)
-import System.IO (appendFile)
 import Text.Printf
 
 outputText :: String -> String -> Double -> IO ()

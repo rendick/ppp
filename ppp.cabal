@@ -21,7 +21,7 @@ executable ppp
     build-depends:    base ^>=4.17.2.1, random, directory, unix, yaml, aeson, text
 
     hs-source-dirs:   app
-    other-modules:	  Commands.Generation, 
+    other-modules:    Commands.Generation, 
                       Commands.ProduceFile,
                       Commands.ParseYaml
 

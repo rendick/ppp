@@ -1,8 +1,6 @@
 module Commands.Generation where
 
 import Commands.ProduceFile
-import Control.Monad (when)
-import System.Directory (doesFileExist)
 import System.Exit (exitSuccess)
 import System.IO (hFlush, stdout)
 import System.Random
@@ -58,8 +56,12 @@ proceedWithPassword passwordLength serviceNameInput = do
       putStrLn "Saving..."
       outputText serviceNameInput pwd entropy
     else do
-      putStrLn "Exiting."
-      exitSuccess
+      putStr "Do you want to repeat password generation? [Y/n] "
+      hFlush stdout
+      repeatPasswordGeneration <- getLine
+      if repeatPasswordGeneration `elem` ["", "y", "Y"]
+        then runD
+        else exitSuccess
 
 runD :: IO ()
 runD = do

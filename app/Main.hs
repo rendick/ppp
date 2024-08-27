@@ -17,8 +17,8 @@ tac = unlines . reverse . lines
 parse :: [String] -> IO String
 parse ["-G"] = runD >> exit
 parse ["--gen"] = runD >> exit
-parse ["-A"] = yamlOK >> exit
-parse ["--all-passwords"] = yamlOK >> exit
+parse ["-S"] = showAllPasswords >> exit 
+parse ["--search"] = searchByName >> exit
 parse ["-h"] = mapM_ putStrLn usage >> exit
 parse ["--help"] = mapM_ putStrLn usage >> exit
 parse ["-v"] = version >> exit
