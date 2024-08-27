@@ -1,16 +1,19 @@
 module Commands.Generation where
 
+import Commands.ProduceFile
+import Control.Monad (when)
+import System.Directory (doesFileExist)
 import System.Exit (exitSuccess)
 import System.IO (hFlush, stdout)
 import System.Random
-import Text.Printf
+import Text.Printf (printf)
 
 randomChar :: IO Char
 randomChar = getStdRandom $ randomR ('0', 'z')
 
 generation :: Int -> IO [Char]
 generation 0 = return ""
-generation n = randomChar >>= \c -> generation (n - 1) >>= \b -> return $ [c] ++ b
+generation n = randomChar >>= \c -> generation (n - 1) >>= \b -> return (c : b)
 
 passwordEntropy :: Int -> Double
 passwordEntropy n = fromIntegral n * logBase 2 94
@@ -20,35 +23,32 @@ prompServiceName = do
   putStr "Write the service for which you want to save the password: "
   hFlush stdout
   serviceNameInput <- getLine
-
-  if serviceNameInput `elem` [""]
+  if null serviceNameInput
     then do
-      putStrLn "You are not able to leav ethe input field blank."
+      putStrLn "You are not able to leave the input field blank."
       prompServiceName
-    else
-      return serviceNameInput
+    else return serviceNameInput
 
-prompPasswordLength :: IO ()
-prompPasswordLength = do
+prompPasswordLength :: String -> IO ()
+prompPasswordLength serviceNameInput = do
   putStr "Write down the desired password length: [16] "
   hFlush stdout
-  lenghtPwdInput <- getLine
-  let passwordLength = if null lenghtPwdInput then 16 else read lenghtPwdInput :: Int
-  if passwordLength < 16
-    then do
-      putStr "Do you really want to use a password less than 16 characters long? [y/N] "
-      hFlush stdout
-      lenghtLine <- getLine
-      if lenghtLine `elem` ["", "n", "N"]
-        then do
-          putStrLn "Exiting."
-          exitSuccess
-        else return ()
-    else
-      return ()
+  lengthPwdInput <- getLine
+  let passwordLength =
+        if null lengthPwdInput
+          then 16
+          else read lengthPwdInput :: Int
 
-  let entropy = passwordEntropy (passwordLength :: Int)
-  pwd <- generation (passwordLength :: Int)
+  if passwordLength < 4 || passwordLength == 0
+    then do
+      putStrLn "Invalid password length. Please enter a length of at least 4 characters."
+      prompPasswordLength serviceNameInput
+    else proceedWithPassword passwordLength serviceNameInput
+
+proceedWithPassword :: Int -> String -> IO ()
+proceedWithPassword passwordLength serviceNameInput = do
+  let entropy = passwordEntropy passwordLength
+  pwd <- generation passwordLength
   printf "%s [%.2f]\n" pwd entropy
   putStr "Do you want to save this password? [Y/n] "
   hFlush stdout
@@ -56,6 +56,7 @@ prompPasswordLength = do
   if savePwdResult `elem` ["", "y", "Y"]
     then do
       putStrLn "Saving..."
+      outputText serviceNameInput pwd entropy
     else do
       putStrLn "Exiting."
       exitSuccess
@@ -63,5 +64,4 @@ prompPasswordLength = do
 runD :: IO ()
 runD = do
   serviceNameInput <- prompServiceName
-  putStrLn serviceNameInput
-  prompPasswordLength
+  prompPasswordLength serviceNameInput
