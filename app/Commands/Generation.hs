@@ -3,8 +3,10 @@ module Commands.Generation where
 import Commands.ProduceFile
 import System.Exit (exitSuccess)
 import System.IO (hFlush, stdout)
+import System.Posix.User
 import System.Random
 import Text.Printf (printf)
+import Control.Monad (when)
 
 randomChar :: IO Char
 randomChar = getStdRandom $ randomR ('0', 'z')
@@ -14,7 +16,7 @@ generation 0 = return ""
 generation n = randomChar >>= \c -> generation (n - 1) >>= \b -> return (c : b)
 
 passwordEntropy :: Int -> Double
-passwordEntropy n = fromIntegral n * logBase 2 94
+passwordEntropy n = fromIntegral n * logBase 2 95
 
 prompServiceName :: IO String
 prompServiceName = do
@@ -29,12 +31,15 @@ prompServiceName = do
 
 prompPasswordLength :: String -> IO ()
 prompPasswordLength serviceNameInput = do
-  putStr "Write down the desired password length: [16] "
+  username <- getLoginName
+  let passwordStoragePath = "/home/" ++ username ++ "/passwd.yaml"
+  putStrLn passwordStoragePath
+  putStr "Write down the desired password length: [12] "
   hFlush stdout
   lengthPwdInput <- getLine
   let passwordLength =
         if null lengthPwdInput
-          then 16
+          then 12
           else read lengthPwdInput :: Int
 
   if passwordLength < 4 || passwordLength == 0
@@ -46,6 +51,18 @@ prompPasswordLength serviceNameInput = do
 proceedWithPassword :: Int -> String -> IO ()
 proceedWithPassword passwordLength serviceNameInput = do
   let entropy = passwordEntropy passwordLength
+  when (entropy < 75) $ do
+      putStr "The entropy is less than 75. Do you want to continue? [y/n] "
+      hFlush stdout
+      entropyStrengthInput <- getLine
+      if entropyStrengthInput `elem` ["y", "Y"]
+        then return ()
+        else do
+          putStr "Do you want to repeat password generation? [Y/n] "
+          hFlush stdout
+          repeatField <- getLine
+          if repeatField `elem` ["", "y", "Y"] then runD else exitSuccess
+
   pwd <- generation passwordLength
   printf "%s [%.2f]\n" pwd entropy
   putStr "Do you want to save this password? [Y/n] "
@@ -65,5 +82,5 @@ proceedWithPassword passwordLength serviceNameInput = do
 
 runD :: IO ()
 runD = do
-  serviceNameInput <- prompServiceName
-  prompPasswordLength serviceNameInput
+ serviceNameInput <- prompServiceName
+ prompPasswordLength serviceNameInput

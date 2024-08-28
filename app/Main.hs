@@ -19,17 +19,20 @@ parse ["-g"] = runD >> exit
 parse ["--gen"] = runD >> exit
 parse ["-A"] = showAllPasswords >> exit
 parse ["--all-passwords"] = showAllPasswords >> exit
-parse ["-s"] = searchByName >> exit 
+parse ["-s"] = searchByName >> exit
 parse ["--search"] = searchByName >> exit
 parse ["-h"] = mapM_ putStrLn usage >> exit
 parse ["--help"] = mapM_ putStrLn usage >> exit
 parse ["-v"] = version >> exit
 parse ["--version"] = version >> exit
 parse [] = mapM_ putStrLn usage >> exit
-parse fs = concat <$> mapM readFile fs
+parse _ = do
+  putStrLn "Invalid argument!\n"
+  mapM_ putStrLn usage
+  exit
 
 version :: IO ()
-version = putStrLn "v0.1.0 in development"
+version = putStrLn "v0.1.0 [in development]"
 
 usage :: [String]
 usage =

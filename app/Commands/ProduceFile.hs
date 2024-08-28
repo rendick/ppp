@@ -1,12 +1,15 @@
 module Commands.ProduceFile where
 
 import System.Directory (doesFileExist)
+import System.Posix.User
 import Text.Printf
 
 outputText :: String -> String -> Double -> IO ()
 outputText service pwd entropy = do
-  exists <- doesFileExist "passwd.yaml"
-
+  username <- getLoginName
+  putStrLn username
+  let passwordStoragePath = "/home/" ++ username ++ "/passwd.yaml"
+  exists <- doesFileExist passwordStoragePath
   let pppYamlContent =
         unlines
           [ "- name: " ++ service,
@@ -16,8 +19,8 @@ outputText service pwd entropy = do
 
   if exists
     then do
-      appendFile "passwd.yaml" ("\n" ++ pppYamlContent)
+      appendFile passwordStoragePath ("\n" ++ pppYamlContent)
       putStrLn "New data appended successfully."
     else do
-      writeFile "passwd.yaml" pppYamlContent
+      writeFile passwordStoragePath pppYamlContent
       putStrLn "File created and data written successfully."

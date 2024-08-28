@@ -10,6 +10,7 @@ import qualified Data.Text as T
 import Data.Yaml (ParseException, decodeFileEither)
 import GHC.Generics (Generic)
 import System.IO (hFlush, stdout)
+import System.Posix.User
 
 data Record = Record
   { name :: Text,
@@ -22,10 +23,13 @@ instance FromJSON Record
 
 searchByName :: IO ()
 searchByName = do
+  username <- getLoginName
+  let passwordStoragePath = "/home/" ++ username ++ "/passwd.yaml"
+  putStrLn passwordStoragePath
   putStr "Enter the name of the password to search for: "
   hFlush stdout
   searchName <- T.pack <$> getLine
-  result <- decodeFileEither "passwd.yaml" :: IO (Either ParseException [Record])
+  result <- decodeFileEither passwordStoragePath :: IO (Either ParseException [Record])
   case result of
     Left err -> putStrLn $ "Error while parsing YAML file: " ++ show err
     Right records -> do
@@ -36,7 +40,9 @@ searchByName = do
 
 showAllPasswords :: IO ()
 showAllPasswords = do
-  result <- decodeFileEither "passwd.yaml" :: IO (Either ParseException [Record])
+  username <- getLoginName
+  let passwordStoragePath = "/home/" ++ username ++ "/passwd.yaml"
+  result <- decodeFileEither passwordStoragePath :: IO (Either ParseException [Record])
   case result of
     Left err -> putStrLn $ "Error parsing YAML file: " ++ show err
     Right records -> forM_ records print
