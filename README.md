@@ -20,7 +20,6 @@ chmod +x ./ppp
 
 ```
 cabal clean
-cabal build
 cabal build --ghc-options="-O2  -funbox-strict-fields -split-sections"
 # If you want to optimize the binary file, you can use the strip command
 strip --strip-all dist-newstyle/build/x86_64-linux/ghc-*/ppp-*/x/ppp/build/ppp/ppp
